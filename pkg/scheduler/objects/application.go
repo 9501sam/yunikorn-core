@@ -1090,12 +1090,23 @@ func (sa *Application) tryNodes(ask *AllocationAsk, iterator NodeIterator) *Allo
 	allocKey := ask.AllocationKey
 	reservedAsks := sa.GetAskReservations(allocKey)
 	allowReserve := len(reservedAsks) < int(ask.pendingRepeatAsk)
+
+	// log.Logger().Info("enter tryNodes()",
+	// 	zap.String("ask.Tags[\"node\"]", ask.Tags["node"]))
+
 	for iterator.HasNext() {
 		node := iterator.Next()
 		if node == nil {
 			log.Logger().Warn("Node iterator failed to return a node")
 			return nil
 		}
+
+		// if ask.Tags["node"] != node.NodeID {
+		// 	log.Logger().Info("",
+		// 		zap.String("node.NodeID", node.NodeID))
+		// 	continue
+		// }
+
 		// skip the node if the node is not valid for the ask
 		if err := node.IsValidFor(ask); err != nil {
 			log.Logger().Debug("skipping node for ask",

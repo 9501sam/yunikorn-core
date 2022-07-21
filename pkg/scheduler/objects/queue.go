@@ -1063,10 +1063,13 @@ func (sq *Queue) SetMaxResource(max *resources.Resource) {
 // Lock free call this all locks are taken when needed in called functions
 func (sq *Queue) TryAllocate(iterator func() NodeIterator) *Allocation {
 	if sq.IsLeafQueue() {
+		log.Logger().Info("enter sq.TryAllocate()")
+
 		// get the headroom
 		headRoom := sq.getHeadRoom()
 		// process the apps (filters out app without pending requests)
 		for _, app := range sq.sortApplications(true) {
+			log.Logger().Info(fmt.Sprintf("app: %+v\n", app))
 			alloc := app.tryAllocate(headRoom, iterator)
 			if alloc != nil {
 				log.Logger().Debug("allocation found on queue",

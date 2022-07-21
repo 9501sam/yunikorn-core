@@ -737,11 +737,14 @@ func (cc *ClusterContext) handleRMUpdateAllocationEvent(event *rmevent.RMUpdateA
 }
 
 func (cc *ClusterContext) processAsks(request *si.AllocationRequest) {
+	log.Logger().Info("enter processAsks()")
+	log.Logger().Info(fmt.Sprintf("%+v\n", request))
 	// Send rejects back to RM
 	rejectedAsks := make([]*si.RejectedAllocationAsk, 0)
 
 	// Send to scheduler
 	for _, siAsk := range request.Asks {
+		log.Logger().Info(fmt.Sprintf("%+v\n", siAsk))
 		// try to get ApplicationInfo
 		partition := cc.GetPartition(siAsk.PartitionName)
 		if partition == nil {
@@ -757,6 +760,23 @@ func (cc *ClusterContext) processAsks(request *si.AllocationRequest) {
 			})
 			continue
 		}
+
+		// get resources
+		allNode := partition.nodes.GetNodes()
+		for _, n := range allNode {
+			res := n.GetAvailableResource()
+			log.Logger().Info(fmt.Sprintf("%s\n", n.NodeID))
+			log.Logger().Info(fmt.Sprintf("%+v\n", res))
+		}
+
+		// set resources amount
+		for _, quantity := range siAsk.ResourceAsk.Resources {
+			result := quantity
+			result.Value = result.Value * 2
+		}
+
+		// determinate node to lab5
+		// siAsk.Tags["node"] = "lab5"
 
 		// try adding to app
 		if err := partition.addAllocationAsk(siAsk); err != nil {
