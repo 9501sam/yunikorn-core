@@ -30,10 +30,11 @@ const (
 	FairSortPolicy                     // fair based on usage
 	StateAwarePolicy                   // only 1 app in starting state
 	Undefined                          // not initialised or parsing failed
+	DRFSortPolicy                      // drf
 )
 
 func (s SortPolicy) String() string {
-	return [...]string{"fifo", "fair", "stateaware", "undefined"}[s]
+	return [...]string{"fifo", "fair", "stateaware", "undefined", "drf"}[s]
 }
 
 func SortPolicyFromString(str string) (SortPolicy, error) {
@@ -45,6 +46,8 @@ func SortPolicyFromString(str string) (SortPolicy, error) {
 		return FairSortPolicy, nil
 	case StateAwarePolicy.String():
 		return StateAwarePolicy, nil
+	case DRFSortPolicy.String():
+		return DRFSortPolicy, nil
 	default:
 		return Undefined, fmt.Errorf("undefined policy: %s", str)
 	}

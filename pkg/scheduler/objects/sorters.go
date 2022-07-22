@@ -19,10 +19,12 @@
 package objects
 
 import (
+	"fmt"
 	"sort"
 	"time"
 
 	"github.com/apache/yunikorn-core/pkg/common/resources"
+	"github.com/apache/yunikorn-core/pkg/log"
 	"github.com/apache/yunikorn-core/pkg/metrics"
 	"github.com/apache/yunikorn-core/pkg/scheduler/policies"
 )
@@ -72,8 +74,23 @@ func sortApplications(apps map[string]*Application, sortType policies.SortPolicy
 			r := sortedApps[j]
 			return l.SubmissionTime.Before(r.SubmissionTime)
 		})
+	case policies.DRFSortPolicy:
+		sortedApps = filterOnPendingResources(apps)
+		// Sort by domanant share
+		sort.SliceStable(sortedApps, func(i, j int) bool {
+			l := sortedApps[i]
+			r := sortedApps[j]
+			return CompDominantShare(l.GetAllocatedResource(), r.GetAllocatedResource(), globalResource) < 0
+		})
 	}
 	metrics.GetSchedulerMetrics().ObserveAppSortingLatency(sortingStart)
+
+	log.Logger().Info("drf: ------------------------------------------------------------")
+	// log.Logger().Info(fmt.Sprintf("globalResource: %+v\n", globalResource))
+	for i, app := range sortedApps {
+		log.Logger().Info(fmt.Sprintf("drf: %d: %s, share: %+v\n", i, app.ApplicationID, getDominantShare(app.GetAllocatedResource(), globalResource)))
+	}
+
 	return sortedApps
 }
 
@@ -139,4 +156,35 @@ func sortAskByPriority(requests []*AllocationAsk, ascending bool) {
 		}
 		return l.priority > r.priority
 	})
+}
+
+func getDominantShare(res, total *resources.Resource) float64 {
+	totalCPU := total.Resources[resources.MEMORY]
+	totalMEM := total.Resources[resources.VCORE]
+	resCPU := res.Resources[resources.MEMORY]
+	resMEM := res.Resources[resources.VCORE]
+	CPUShare := float64(resCPU) / float64(totalCPU)
+	MEMShare := float64(resMEM) / float64(totalMEM)
+	var dominantShare float64
+	if CPUShare > MEMShare {
+		dominantShare = CPUShare
+	} else {
+		dominantShare = MEMShare
+	}
+	return dominantShare
+}
+
+// Compare the dominant shares and return the compared value
+// 0 for equal shares
+// 1 if the left share is larger
+// -1 if the right share is larger
+func CompDominantShare(left, right, total *resources.Resource) int {
+	lshare := getDominantShare(left, total)
+	rshare := getDominantShare(right, total)
+	if lshare > rshare {
+		return 1
+	} else if lshare < rshare {
+		return -1
+	}
+	return 0
 }
