@@ -86,7 +86,11 @@ func sortApplications(apps map[string]*Application, sortType policies.SortPolicy
 	metrics.GetSchedulerMetrics().ObserveAppSortingLatency(sortingStart)
 
 	log.Logger().Info("drf: ------------------------------------------------------------")
-	// log.Logger().Info(fmt.Sprintf("globalResource: %+v\n", globalResource))
+	log.Logger().Info(fmt.Sprintf("drf: apps"))
+	for i, app := range apps {
+		log.Logger().Info(fmt.Sprintf("drf: %d: %s, share: %+v\n", i, app.ApplicationID, getDominantShare(app.GetAllocatedResource(), globalResource)))
+	}
+	log.Logger().Info(fmt.Sprintf("drf: sortedApps"))
 	for i, app := range sortedApps {
 		log.Logger().Info(fmt.Sprintf("drf: %d: %s, share: %+v\n", i, app.ApplicationID, getDominantShare(app.GetAllocatedResource(), globalResource)))
 	}

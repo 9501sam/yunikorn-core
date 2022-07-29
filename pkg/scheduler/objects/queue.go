@@ -1072,7 +1072,7 @@ func (sq *Queue) TryAllocate(iterator func() NodeIterator) *Allocation {
 			log.Logger().Info(fmt.Sprintf("app: %+v\n", app))
 			alloc := app.tryAllocate(headRoom, iterator)
 			if alloc != nil {
-				log.Logger().Debug("allocation found on queue",
+				log.Logger().Debug("drf: allocation found on queue",
 					zap.String("queueName", sq.QueuePath),
 					zap.String("appID", app.ApplicationID),
 					zap.String("allocation", alloc.String()))
