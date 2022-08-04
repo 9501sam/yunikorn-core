@@ -134,7 +134,7 @@ func (cc *ClusterContext) schedule() bool {
 			alloc = psc.tryPlaceholderAllocate()
 			// nothing reserved that can be allocated try normal allocate
 			if alloc == nil {
-				alloc = psc.tryAllocate()
+				// alloc = psc.tryAllocate()
 			}
 		}
 		if alloc != nil {
@@ -762,18 +762,18 @@ func (cc *ClusterContext) processAsks(request *si.AllocationRequest) {
 		}
 
 		// get resources
-		allNode := partition.nodes.GetNodes()
-		for _, n := range allNode {
-			res := n.GetAvailableResource()
-			log.Logger().Info(fmt.Sprintf("%s\n", n.NodeID))
-			log.Logger().Info(fmt.Sprintf("%+v\n", res))
-		}
+		// allNode := partition.nodes.GetNodes()
+		// for _, n := range allNode {
+		// 	res := n.GetAvailableResource()
+		// 	log.Logger().Info(fmt.Sprintf("%s\n", n.NodeID))
+		// 	log.Logger().Info(fmt.Sprintf("%+v\n", res))
+		// }
 
 		// set resources amount
-		for _, quantity := range siAsk.ResourceAsk.Resources {
-			result := quantity
-			result.Value = result.Value * 2
-		}
+		// for _, quantity := range siAsk.ResourceAsk.Resources {
+		// 	result := quantity
+		// 	result.Value = result.Value * 2
+		// }
 
 		// determinate node to lab5
 		// siAsk.Tags["node"] = "lab5"

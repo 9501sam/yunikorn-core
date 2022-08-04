@@ -842,6 +842,9 @@ func (pc *PartitionContext) tryReservedAllocate() *objects.Allocation {
 		// nothing to do just return
 		return nil
 	}
+
+	fuga(pc.GetApplications(), pc.GetNodes())
+
 	// try allocating from the root down
 	alloc := pc.root.TryReservedAllocate(pc.GetNodeIterator)
 	if alloc != nil {
