@@ -108,6 +108,12 @@ func (aa *AllocationAsk) GetPendingAskRepeat() int32 {
 	return aa.pendingRepeatAsk
 }
 
+func (aa *AllocationAsk) GetAllocatedResource() *resources.Resource {
+	aa.RLock()
+	defer aa.RUnlock()
+	return aa.AllocatedResource
+}
+
 // test only
 func (aa *AllocationAsk) SetPendingAskRepeat(pendingRepeatAsk int32) {
 	aa.Lock()

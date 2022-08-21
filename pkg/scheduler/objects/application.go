@@ -459,6 +459,12 @@ func (sa *Application) GetPendingResource() *resources.Resource {
 	return sa.pending
 }
 
+func (sa *Application) GetAllRequests() map[string]*AllocationAsk {
+	sa.RLock()
+	defer sa.RUnlock()
+	return sa.requests
+}
+
 // Remove one or more allocation asks from this application.
 // This also removes any reservations that are linked to the ask.
 // The return value is the number of reservations released
