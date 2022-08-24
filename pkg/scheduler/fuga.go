@@ -3,6 +3,7 @@ package scheduler
 import (
 	"fmt"
 	"math"
+	"sort"
 
 	"github.com/apache/yunikorn-core/pkg/common/resources"
 	"github.com/apache/yunikorn-core/pkg/log"
@@ -283,7 +284,7 @@ func G() (*allocationDecision, error) {
 	// TODO
 	log.Logger().Info(fmt.Sprintf("fuga: o[numNodes]*strategiesSet:"))
 	for m := 0; m < numNodes; m++ {
-		log.Logger().Info(fmt.Sprintf("fuga: node %d(%s), o[%d]", m, allNodes[m].NodeID, m))
+		log.Logger().Info(fmt.Sprintf("fuga: node %d(%s), o[%d], min = %f", m, allNodes[m].NodeID, m, o[m].min))
 
 		tmpSs := o[m]
 		if tmpSs == nil {
@@ -301,30 +302,36 @@ func G() (*allocationDecision, error) {
 	}
 	// TODO
 
-	// // Step 3: Generate the Extension-form Game Tree
-	// log.Logger().Info(fmt.Sprintf("fuga: Step 3: Generate the Extension-form Game Tree"))
-	// // for indices
-	// indices := make([]int, numNodes)
-	// type pair struct {
-	// 	index int
-	// 	min   float64
-	// }
-	// tmp := make([]*pair, numNodes)
-	// for i, p := range o {
-	// 	tmpPair := &pair{
-	// 		index: i,
-	// 		min:   p.min,
-	// 	}
-	// 	tmp[i] = tmpPair
-	// }
-	// sort.SliceStable(tmp, func(i, j int) bool {
-	// 	l := tmp[i]
-	// 	r := tmp[j]
-	// 	return l.min < r.min
-	// })
-	// for i, t := range tmp {
-	// 	indices[i] = t.index
-	// }
+	// Step 3: Generate the Extension-form Game Tree
+	log.Logger().Info(fmt.Sprintf("fuga: Step 3: Generate the Extension-form Game Tree"))
+	// for indices
+	indices := make([]int, numNodes)
+	type pair struct {
+		index int
+		min   float64
+	}
+	tmp := make([]*pair, numNodes)
+	for i, ss := range o {
+		tmpPair := &pair{
+			index: i,
+			min:   ss.min,
+		}
+		tmp[i] = tmpPair
+	}
+	sort.SliceStable(tmp, func(i, j int) bool {
+		l := tmp[i]
+		r := tmp[j]
+		return l.min < r.min
+	})
+	for i, t := range tmp {
+		indices[i] = t.index
+	}
+
+	// TODO
+	log.Logger().Info(fmt.Sprintf("fuga: indices[numNodes]:"))
+	for i, v := range indices {
+		log.Logger().Info(fmt.Sprintf("fuga: %dth: %d", i, v))
+	}
 
 	// // Step 4: Find the SPNE for a game G
 	// log.Logger().Info(fmt.Sprintf("fuga: Step 4: Find the SPNE for a game G"))
