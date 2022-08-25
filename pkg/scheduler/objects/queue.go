@@ -1203,6 +1203,18 @@ func (sq *Queue) getReservedApps() map[string]int {
 	return copied
 }
 
+func (sq *Queue) GetReservedApps() map[string]int {
+	sq.RLock()
+	defer sq.RUnlock()
+
+	copied := make(map[string]int)
+	for appID, numRes := range sq.reservedApps {
+		copied[appID] = numRes
+	}
+	// increase the number of reservations for this app
+	return copied
+}
+
 // Reserve increments the number of reservations for the application adding it to the map if needed.
 // No checks this is only called when a reservation is processed using the app stored in the queue.
 func (sq *Queue) Reserve(appID string) {

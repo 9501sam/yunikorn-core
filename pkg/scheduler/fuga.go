@@ -246,7 +246,6 @@ func skew(com *combination, m int) float64 {
 	sk += math.Pow(temp2u/ua-1, 2)
 	sk = math.Pow(sk, 0.5)
 	return sk
-	return 0.0
 }
 
 func sgn(x float64) float64 {
@@ -260,7 +259,7 @@ func sgn(x float64) float64 {
 
 func U(A *allocationDecision, m int) float64 {
 	com := (*A)[m]
-	log.Logger().Info(fmt.Sprintf("fuga: com[%d] = %+v", m, com))
+	// log.Logger().Info(fmt.Sprintf("fuga: com[%d] = %+v", m, com))
 	if com == nil {
 		return 0.0
 	}
@@ -333,73 +332,104 @@ func G() (*allocationDecision, error) {
 		log.Logger().Info(fmt.Sprintf("fuga: %dth: %d", i, v))
 	}
 
-	// // Step 4: Find the SPNE for a game G
-	// log.Logger().Info(fmt.Sprintf("fuga: Step 4: Find the SPNE for a game G"))
-	// // var selection [numNodes]int
-	// selection := make([]int, numNodes)
-	// // var alloc allocationDecision
-	// alloc := make(allocationDecision)
+	// Step 4: Find the SPNE for a game G
+	log.Logger().Info(fmt.Sprintf("fuga: Step 4: Find the SPNE for a game G"))
+	// var selection [numNodes]int
+	selection := make([]int, numNodes)
+	// var alloc allocationDecision
+	alloc := make(allocationDecision)
 
-	// // numNodes and numNodes-1
-	// theLast := o[indices[numNodes-1]].coms
-	// theSecondLast := o[indices[numNodes-2]].coms
-	// var tableX [eta][eta]float64
-	// var tableY [eta][eta]float64
-	// var max [eta]int
-	// var x, y int
-	// for x = 0; x < eta; x++ {
-	// 	var maxU float64
-	// 	for y = 0; y < eta; y++ {
-	// 		alloc[indices[numNodes-1]] = theLast[y]
-	// 		alloc[indices[numNodes-2]] = theSecondLast[x]
+	// numNodes and numNodes-1
+	theLast := o[indices[numNodes-1]].coms
+	theSecondLast := o[indices[numNodes-2]].coms
+	var tableX [eta][eta]float64
+	var tableY [eta][eta]float64
+	var max [eta]int
+	var x, y int
+	for x = 0; x < eta; x++ {
+		var maxU float64
+		for y = 0; y < eta; y++ {
+			alloc[indices[numNodes-1]] = theLast[y]
+			alloc[indices[numNodes-2]] = theSecondLast[x]
 
-	// 		tableX[x][y] = U(&alloc, x)
-	// 		tableY[x][y] = U(&alloc, y)
-	// 		if y == 0 || tableY[x][y] > maxU {
-	// 			maxU = tableY[x][y]
-	// 			max[x] = y
-	// 		}
-	// 	}
-	// }
+			tableX[x][y] = U(&alloc, x)
+			tableY[x][y] = U(&alloc, y)
+			if y == 0 || tableY[x][y] > maxU {
+				maxU = tableY[x][y]
+				max[x] = y
+			}
+		}
+	}
 
-	// var maxU float64
-	// var maxX int
-	// var maxY int
-	// for x = 0; x < eta; x++ {
-	// 	y = max[x]
-	// 	if x == 0 || tableX[x][y] > maxU {
-	// 		maxU = tableX[x][y]
-	// 		maxX = x
-	// 		maxY = y
-	// 	}
-	// }
-	// selection[indices[numNodes-2]] = maxX
-	// selection[indices[numNodes-1]] = maxY
+	var maxU float64
+	var maxX int
+	var maxY int
+	for x = 0; x < eta; x++ {
+		y = max[x]
+		if x == 0 || tableX[x][y] > maxU {
+			maxU = tableX[x][y]
+			maxX = x
+			maxY = y
+		}
+	}
+	selection[indices[numNodes-2]] = maxX
+	selection[indices[numNodes-1]] = maxY
 
-	// alloc[indices[numNodes-1]] = o[indices[numNodes-1]].coms[maxY]
-	// alloc[indices[numNodes-2]] = o[indices[numNodes-2]].coms[maxX]
+	alloc[indices[numNodes-1]] = o[indices[numNodes-1]].coms[maxY]
+	alloc[indices[numNodes-2]] = o[indices[numNodes-2]].coms[maxX]
 
-	// var i int
-	// for i = numNodes - 2; i >= 0; i-- {
-	// 	m := indices[i]
-	// 	coms := o[m].coms
-	// 	var maxU float64
-	// 	var maxX int
-	// 	for x = 0; x < eta; x++ {
-	// 		com := coms[x]
-	// 		alloc[m] = com
-	// 		tmpU := U(&alloc, m)
-	// 		if x == 0 || tmpU > maxU {
-	// 			maxU = tmpU
-	// 			maxX = x
-	// 		}
-	// 	}
-	// 	com := coms[maxX]
-	// 	alloc[m] = com
-	// }
+	var i int
+	for i = numNodes - 2; i >= 0; i-- {
+		m := indices[i]
+		coms := o[m].coms
+		var maxU float64
+		var maxX int
+		for x = 0; x < eta; x++ {
+			com := coms[x]
+			alloc[m] = com
+			tmpU := U(&alloc, m)
+			if x == 0 || tmpU > maxU {
+				maxU = tmpU
+				maxX = x
+			}
+		}
+		com := coms[maxX]
+		alloc[m] = com
+	}
 
-	// return &alloc, nil
+	return &alloc, nil
 	return nil, nil
+}
+
+func reserve(ad *allocationDecision) error {
+	for m := 0; m < numNodes; m++ {
+		node := allNodes[m]
+		if node == nil {
+			return fmt.Errorf("reserve(): node == nil")
+		}
+
+		com := (*ad)[m]
+		for i := 0; i < numApps; i++ {
+			var app *objects.Application
+			if app = allApps[i]; app == nil {
+				return fmt.Errorf("reserve(): app == nil")
+			}
+
+			num := (*com)[i]
+			for j := int64(0); j < num; j++ {
+				for _, request := range app.GetAllRequests() {
+					if request != nil {
+						if err := app.Reserve(node, request); err != nil {
+							continue
+						}
+						break
+					}
+				}
+			}
+		}
+	}
+
+	return nil
 }
 
 func fuga(apps []*objects.Application, nodes []*objects.Node) error {
@@ -420,6 +450,8 @@ func fuga(apps []*objects.Application, nodes []*objects.Node) error {
 
 	// TODO
 	log.Logger().Info("fuga: game informations:")
+	log.Logger().Info(fmt.Sprintf("fuga: numNodes = %d", numNodes))
+	log.Logger().Info(fmt.Sprintf("fuga: numApps = %d", numApps))
 	log.Logger().Info("fuga: allNodes:")
 	for m, node := range allNodes {
 		availible := node.GetAvailableResource().Resources
@@ -436,14 +468,15 @@ func fuga(apps []*objects.Application, nodes []*objects.Node) error {
 	// TODO
 
 	ad, err := G()
-	if ad != nil {
-		log.Logger().Info(fmt.Sprintf("fuga: ad: %+v\n", ad))
-		for m, com := range *ad {
-			log.Logger().Info(fmt.Sprintf("fuga: com[%d] = %+v", m, com))
-		}
-		log.Logger().Info("fuga: haha\n")
-	} else {
-		log.Logger().Info("fuga: baba\n")
+	if ad == nil || err != nil {
+		log.Logger().Info("fuga: fuga failed\n")
+		return err
 	}
+
+	log.Logger().Info(fmt.Sprintf("fuga: ad: %+v\n", ad))
+	for m, com := range *ad {
+		log.Logger().Info(fmt.Sprintf("fuga: com[%d] = %+v", m, com))
+	}
+	log.Logger().Info("fuga: haha\n")
 	return nil
 }

@@ -57,7 +57,7 @@ func NewAllocationAsk(ask *si.AllocationAsk) *AllocationAsk {
 	saa := &AllocationAsk{
 		AllocationKey:     ask.AllocationKey,
 		AllocatedResource: resources.NewResourceFromProto(ask.ResourceAsk),
-		pendingRepeatAsk:  ask.MaxAllocations,
+		pendingRepeatAsk:  1, // ask.MaxAllocations,
 		maxAllocations:    ask.MaxAllocations,
 		ApplicationID:     ask.ApplicationID,
 		PartitionName:     ask.PartitionName,
