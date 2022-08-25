@@ -88,7 +88,7 @@ func (aa *AllocationAsk) String() string {
 
 // GetAllocationKey returns the allocation key for this ask
 func (aa *AllocationAsk) GetAllocationKey() string {
-	return aa.allocationKey
+	return aa.AllocationKey
 }
 
 // Update pending ask repeat with the delta given.
@@ -171,6 +171,13 @@ func (aa *AllocationAsk) getTimeout() time.Duration {
 	aa.RLock()
 	defer aa.RUnlock()
 	return aa.execTimeout
+}
+
+func (aa *AllocationAsk) SetRequiredNode(requiredNode string) error {
+	aa.RLock()
+	defer aa.RUnlock()
+	aa.requiredNode = requiredNode
+	return nil
 }
 
 func (aa *AllocationAsk) GetRequiredNode() string {

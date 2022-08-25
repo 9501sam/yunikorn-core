@@ -1063,16 +1063,16 @@ func (sq *Queue) SetMaxResource(max *resources.Resource) {
 // Lock free call this all locks are taken when needed in called functions
 func (sq *Queue) TryAllocate(iterator func() NodeIterator, getnode func(string) *Node) *Allocation {
 	if sq.IsLeafQueue() {
-		log.Logger().Info("enter sq.TryAllocate()")
+		log.Logger().Info("fuga: enter sq.TryAllocate()")
 
 		// get the headroom
 		headRoom := sq.getHeadRoom()
 		// process the apps (filters out app without pending requests)
 		for _, app := range sq.sortApplications(true) {
-			log.Logger().Info(fmt.Sprintf("app: %+v\n", app))
+			// log.Logger().Info(fmt.Sprintf("fuga: app.tryAllocate(): %s", app.ApplicationID))
 			alloc := app.tryAllocate(headRoom, iterator, getnode)
 			if alloc != nil {
-				log.Logger().Debug("allocation found on queue",
+				log.Logger().Debug("fuga: allocation found on queue",
 					zap.String("queueName", sq.QueuePath),
 					zap.String("appID", app.ApplicationID),
 					zap.String("allocation", alloc.String()))
@@ -1082,7 +1082,7 @@ func (sq *Queue) TryAllocate(iterator func() NodeIterator, getnode func(string) 
 	} else {
 		// process the child queues (filters out queues without pending requests)
 		for _, child := range sq.sortQueues() {
-			alloc := child.TryAllocate(iterator)
+			alloc := child.TryAllocate(iterator, getnode)
 			if alloc != nil {
 				return alloc
 			}

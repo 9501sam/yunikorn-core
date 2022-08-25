@@ -67,8 +67,8 @@ func (ss *strategiesSet) shouldAdd(com *combination, m int) bool {
 }
 
 func (ss *strategiesSet) push(com *combination, m int) {
-	log.Logger().Info(fmt.Sprintf("fuga: enter push()"))
-	log.Logger().Info(fmt.Sprintf("fuga: com = %+v, minu(com, m) = %f", com, minu(com, m)))
+	// log.Logger().Info(fmt.Sprintf("fuga: enter push()"))
+	// log.Logger().Info(fmt.Sprintf("fuga: com = %+v, minu(com, m) = %f", com, minu(com, m)))
 
 	// clone com
 	newCom := make(combination)
@@ -98,9 +98,9 @@ func (ss *strategiesSet) push(com *combination, m int) {
 		if com == nil {
 			break
 		}
-		log.Logger().Info(fmt.Sprintf("fuga: %dth combination: com = %+v, minu(com, m) = %f", i, com, minu(com, m)))
+		// log.Logger().Info(fmt.Sprintf("fuga: %dth combination: com = %+v, minu(com, m) = %f", i, com, minu(com, m)))
 	}
-	log.Logger().Info(fmt.Sprintf("fuga: min = %f, minIndex = %d", min, minIndex))
+	// log.Logger().Info(fmt.Sprintf("fuga: min = %f, minIndex = %d", min, minIndex))
 }
 
 func initGame(apps []*objects.Application, nodes []*objects.Node) error {
@@ -173,8 +173,8 @@ func find(com combination, l int, m int) {
 	if !check(node, com) {
 		return
 	}
-	log.Logger().Info(fmt.Sprintf("fuga: enter find(), com = %+v, l = %d, m = %d, minu(com, m) = %f",
-		com, l, m, minu(&com, m)))
+	// log.Logger().Info(fmt.Sprintf("fuga: enter find(), com = %+v, l = %d, m = %d, minu(com, m) = %f",
+	// 	com, l, m, minu(&com, m)))
 
 	if ss.shouldAdd(&com, m) { // TODO
 		ss.push(&com, m)
@@ -270,10 +270,10 @@ func G() (*allocationDecision, error) {
 	var err error
 
 	// Step 2: Strategies Set for Each Player
-	log.Logger().Info(fmt.Sprintf("fuga: Step 2: Strategies Set for Each Player"))
+	// log.Logger().Info(fmt.Sprintf("fuga: Step 2: Strategies Set for Each Player"))
 	o := make([]*strategiesSet, numNodes)
 	for m := 0; m < numNodes; m++ {
-		log.Logger().Info(fmt.Sprintf("fuga: node %d(%s) getStrategies()", m, allNodes[m].NodeID))
+		// log.Logger().Info(fmt.Sprintf("fuga: node %d(%s) getStrategies()", m, allNodes[m].NodeID))
 		o[m], err = getStrategies(m)
 		if err != nil {
 			return nil, err
@@ -281,9 +281,9 @@ func G() (*allocationDecision, error) {
 	}
 
 	// TODO
-	log.Logger().Info(fmt.Sprintf("fuga: o[numNodes]*strategiesSet:"))
+	// log.Logger().Info(fmt.Sprintf("fuga: o[numNodes]*strategiesSet:"))
 	for m := 0; m < numNodes; m++ {
-		log.Logger().Info(fmt.Sprintf("fuga: node %d(%s), o[%d], min = %f", m, allNodes[m].NodeID, m, o[m].min))
+		// log.Logger().Info(fmt.Sprintf("fuga: node %d(%s), o[%d], min = %f", m, allNodes[m].NodeID, m, o[m].min))
 
 		tmpSs := o[m]
 		if tmpSs == nil {
@@ -295,14 +295,14 @@ func G() (*allocationDecision, error) {
 			if com == nil {
 				break
 			}
-			log.Logger().Info(fmt.Sprintf("fuga: %dth combination: com = %+v, minu(com, m) = %f",
-				i, com, minu(com, m)))
+			// log.Logger().Info(fmt.Sprintf("fuga: %dth combination: com = %+v, minu(com, m) = %f",
+			// 	i, com, minu(com, m)))
 		}
 	}
 	// TODO
 
 	// Step 3: Generate the Extension-form Game Tree
-	log.Logger().Info(fmt.Sprintf("fuga: Step 3: Generate the Extension-form Game Tree"))
+	// log.Logger().Info(fmt.Sprintf("fuga: Step 3: Generate the Extension-form Game Tree"))
 	// for indices
 	indices := make([]int, numNodes)
 	type pair struct {
@@ -327,10 +327,10 @@ func G() (*allocationDecision, error) {
 	}
 
 	// TODO
-	log.Logger().Info(fmt.Sprintf("fuga: indices[numNodes]:"))
-	for i, v := range indices {
-		log.Logger().Info(fmt.Sprintf("fuga: %dth: %d", i, v))
-	}
+	// log.Logger().Info(fmt.Sprintf("fuga: indices[numNodes]:"))
+	// for i, v := range indices {
+	// 	log.Logger().Info(fmt.Sprintf("fuga: %dth: %d", i, v))
+	// }
 
 	// Step 4: Find the SPNE for a game G
 	log.Logger().Info(fmt.Sprintf("fuga: Step 4: Find the SPNE for a game G"))
@@ -398,7 +398,6 @@ func G() (*allocationDecision, error) {
 	}
 
 	return &alloc, nil
-	return nil, nil
 }
 
 func reserve(ad *allocationDecision) error {
@@ -428,13 +427,16 @@ func reserve(ad *allocationDecision) error {
 				if request == nil {
 					continue
 				}
+				if request.GetRequiredNode() != "" {
+					continue
+				}
 
 				log.Logger().Info(fmt.Sprintf("fuga: reserve(): node %d(%s), app %d(%s), ask %s",
 					m, allNodes[m].NodeID, i, allApps[i].ApplicationID, request.AllocationKey))
-				if err := app.Reserve(node, request); err == nil {
+				if err := request.SetRequiredNode(node.NodeID); err == nil {
 					count++
 				} else {
-					log.Logger().Info(fmt.Sprintf("fuga: reserve(): app.Reserve() failed, err = %+v", err))
+					log.Logger().Info(fmt.Sprintf("fuga: reserve(): request.SetRequiredNode() failed, err = %+v", err))
 					return err
 				}
 			}
@@ -444,45 +446,44 @@ func reserve(ad *allocationDecision) error {
 }
 
 func fuga(apps []*objects.Application, nodes []*objects.Node) error {
-	// log.Logger().Info("fuga: enter fuga()------------------------")
+	log.Logger().Info("fuga: enter fuga()------------------------")
 
-	// // Step 1: Pre-combination Phase
-	// log.Logger().Info("fuga: Step 1: Pre-combination Phase")
-	// var players []*objects.Node
-	// for _, n := range nodes {
-	// 	if resources.StrictlyGreaterThanZero(n.GetAvailableResource()) {
-	// 		players = append(players, n)
-	// 	}
-	// }
-	// err := initGame(apps, players)
-	// if err != nil {
-	// 	return err
-	// }
+	// Step 1: Pre-combination Phase
+	log.Logger().Info("fuga: Step 1: Pre-combination Phase")
+	var players []*objects.Node
+	for _, n := range nodes {
+		if resources.StrictlyGreaterThanZero(n.GetAvailableResource()) {
+			players = append(players, n)
+		}
+	}
+	err := initGame(apps, players)
+	if err != nil {
+		return err
+	}
 
-	// // TODO
-	// log.Logger().Info("fuga: game informations:")
-	// log.Logger().Info(fmt.Sprintf("fuga: numNodes = %d", numNodes))
-	// log.Logger().Info(fmt.Sprintf("fuga: numApps = %d", numApps))
-	// log.Logger().Info("fuga: allNodes:")
-	// for m, node := range allNodes {
-	// 	availible := node.GetAvailableResource().Resources
-	// 	capacity := node.GetCapacity().Resources
-	// 	log.Logger().Info(fmt.Sprintf("fuga: node %d(%s), capacity(mem:%d, vcore:%d), availible(mem:%d, vcore:%d)",
-	// 		m, node.NodeID, capacity[resources.MEMORY], capacity[resources.VCORE], availible[resources.MEMORY], availible[resources.VCORE]))
-	// }
-	// log.Logger().Info("fuga: allRequests:")
-	// for i, app := range allApps {
-	// 	req := allRequests[i].Resources
-	// 	log.Logger().Info(fmt.Sprintf("fuga: app %d(%s), req(mem:%d, vcore:%d)",
-	// 		i, app.ApplicationID, req[resources.MEMORY], req[resources.VCORE]))
-	// }
-	// // TODO
+	// TODO
+	log.Logger().Info("fuga: game informations:")
+	log.Logger().Info(fmt.Sprintf("fuga: numNodes = %d", numNodes))
+	log.Logger().Info(fmt.Sprintf("fuga: numApps = %d", numApps))
+	log.Logger().Info("fuga: allNodes:")
+	for m, node := range allNodes {
+		availible := node.GetAvailableResource().Resources
+		capacity := node.GetCapacity().Resources
+		log.Logger().Info(fmt.Sprintf("fuga: node %d(%s), capacity(mem:%d, vcore:%d), availible(mem:%d, vcore:%d)",
+			m, node.NodeID, capacity[resources.MEMORY], capacity[resources.VCORE], availible[resources.MEMORY], availible[resources.VCORE]))
+	}
+	log.Logger().Info("fuga: allRequests:")
+	for i, app := range allApps {
+		req := allRequests[i].Resources
+		log.Logger().Info(fmt.Sprintf("fuga: app %d(%s), req(mem:%d, vcore:%d)",
+			i, app.ApplicationID, req[resources.MEMORY], req[resources.VCORE]))
+	}
 
-	// ad, err := G()
-	// if ad == nil || err != nil {
-	// 	log.Logger().Info("fuga: fuga failed\n")
-	// 	return err
-	// }
+	ad, err := G()
+	if ad == nil || err != nil {
+		log.Logger().Info("fuga: fuga failed\n")
+		return err
+	}
 
 	// // NOTE: make an allocationDecision for debug
 	// log.Logger().Info("fuga: debug from here")
@@ -492,13 +493,13 @@ func fuga(apps []*objects.Application, nodes []*objects.Node) error {
 	// 	}
 	// }
 
-	// log.Logger().Info(fmt.Sprintf("fuga: ad: %+v\n", ad))
-	// for m, com := range *ad {
-	// 	log.Logger().Info(fmt.Sprintf("fuga: com[%d] = %+v", m, com))
-	// }
+	log.Logger().Info(fmt.Sprintf("fuga: ad: %+v\n", ad))
+	for m, com := range *ad {
+		log.Logger().Info(fmt.Sprintf("fuga: com[%d] = %+v", m, com))
+	}
 
-	// reserve(ad)
+	reserve(ad)
 
-	// log.Logger().Info("fuga: haha\n")
+	log.Logger().Info("fuga: haha\n")
 	return nil
 }

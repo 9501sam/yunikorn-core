@@ -134,7 +134,7 @@ func (cc *ClusterContext) schedule() bool {
 			alloc = psc.tryPlaceholderAllocate()
 			// nothing reserved that can be allocated try normal allocate
 			if alloc == nil {
-				// alloc = psc.tryAllocate()
+				alloc = psc.tryAllocate()
 			}
 		}
 		if alloc != nil {

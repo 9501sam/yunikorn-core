@@ -31,10 +31,10 @@ import (
 	"github.com/apache/yunikorn-scheduler-interface/lib/go/si"
 )
 
-type allocationResult int
+type AllocationResult int
 
 const (
-	None allocationResult = iota
+	None AllocationResult = iota
 	Allocated
 	AllocatedReserved
 	Reserved
@@ -42,7 +42,7 @@ const (
 	Replaced
 )
 
-func (ar allocationResult) String() string {
+func (ar AllocationResult) String() string {
 	return [...]string{"None", "Allocated", "AllocatedReserved", "Reserved", "Unreserved", "Replaced"}[ar]
 }
 
@@ -59,7 +59,7 @@ type Allocation struct {
 	Tags              map[string]string
 	Priority          int32
 	AllocatedResource *resources.Resource
-	Result            allocationResult
+	Result            AllocationResult
 	Releases          []*Allocation
 
 	// private fields need protection
@@ -92,7 +92,7 @@ func NewAllocation(uuid, nodeID string, ask *AllocationAsk) *Allocation {
 	}
 }
 
-func newReservedAllocation(result allocationResult, nodeID string, ask *AllocationAsk) *Allocation {
+func newReservedAllocation(result AllocationResult, nodeID string, ask *AllocationAsk) *Allocation {
 	alloc := NewAllocation("", nodeID, ask)
 	alloc.Result = result
 	return alloc
@@ -199,12 +199,12 @@ func (a *Allocation) getTaskGroup() string {
 func (a *Allocation) GetResult() AllocationResult {
 	a.RLock()
 	defer a.RUnlock()
-	return a.result
+	return a.Result
 }
 
 // SetResult sets the result of this allocation
 func (a *Allocation) SetResult(result AllocationResult) {
 	a.Lock()
 	defer a.Unlock()
-	a.result = result
+	a.Result = result
 }

@@ -793,6 +793,10 @@ func (sa *Application) sortRequests(ascending bool) {
 		if request.GetPendingAskRepeat() == 0 {
 			continue
 		}
+		// NOTE: fuga
+		if request.GetRequiredNode() == "" {
+			continue
+		}
 		sa.sortedRequests = append(sa.sortedRequests, request)
 	}
 	// we might not have any requests
@@ -828,6 +832,16 @@ func (sa *Application) tryAllocate(headRoom *resources.Resource, nodeIterator fu
 	// make sure the request are sorted
 	sa.sortRequests(false)
 	// get all the requests from the app sorted in order
+
+	// NOTE: fuga
+	log.Logger().Info(fmt.Sprintf("fuga: sa.tryAllocate() app: %s", sa.ApplicationID))
+
+	log.Logger().Info(fmt.Sprintf("fuga: sortedRequests:"))
+	for i, req := range sa.sortedRequests {
+		log.Logger().Info(fmt.Sprintf("fuga: sortedRequests[%d] = %s", i, req.AllocationKey))
+	}
+	// NOTE: fuga
+
 	for _, request := range sa.sortedRequests {
 		// if request is not a placeholder but part of a task group and there are still placeholders allocated we do
 		// them on their own.
@@ -839,9 +853,9 @@ func (sa *Application) tryAllocate(headRoom *resources.Resource, nodeIterator fu
 		if !headRoom.FitInMaxUndef(request.AllocatedResource) {
 			// post scheduling events via the event plugin
 			if eventCache := events.GetEventCache(); eventCache != nil {
-				message := fmt.Sprintf("Application %s does not fit into %s queue", request.ApplicationID, sa.queuePath)
+				message := fmt.Sprintf("fuga: Application %s does not fit into %s queue", request.ApplicationID, sa.queuePath)
 				if event, err := events.CreateRequestEventRecord(request.AllocationKey, request.ApplicationID, "InsufficientQueueResources", message); err != nil {
-					log.Logger().Warn("Event creation failed",
+					log.Logger().Warn("fuga: Event creation failed",
 						zap.String("event message", message),
 						zap.Error(err))
 				} else {
@@ -852,6 +866,11 @@ func (sa *Application) tryAllocate(headRoom *resources.Resource, nodeIterator fu
 		}
 
 		requiredNode := request.GetRequiredNode()
+
+		// NOTE: fuga
+		log.Logger().Info(fmt.Sprintf("fuga: app: %s, reuqest: %s, requiredNode: %s",
+			sa.ApplicationID, request.AllocationKey, requiredNode))
+
 		// does request have any constraint to run on specific node?
 		if requiredNode != "" {
 			// the iterator might not have the node we need as it could be reserved, or we have not added it yet
@@ -883,14 +902,14 @@ func (sa *Application) tryAllocate(headRoom *resources.Resource, nodeIterator fu
 			return newReservedAllocation(Reserved, node.NodeID, request)
 		}
 
-		iterator := nodeIterator()
-		if iterator != nil {
-			alloc := sa.tryNodes(request, iterator)
-			// have a candidate return it
-			if alloc != nil {
-				return alloc
-			}
-		}
+		// iterator := nodeIterator()
+		// if iterator != nil {
+		// 	alloc := sa.tryNodes(request, iterator)
+		// 	// have a candidate return it
+		// 	if alloc != nil {
+		// 		return alloc
+		// 	}
+		// }
 	}
 	// no requests fit, skip to next app
 	return nil

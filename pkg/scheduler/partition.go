@@ -827,11 +827,25 @@ func (pc *PartitionContext) tryAllocate() *objects.Allocation {
 		// nothing to do just return
 		return nil
 	}
+
+	log.Logger().Info("fuga: enter (pc *PartitionContext) tryAllocate()")
+
 	// try allocating from the root down
+	log.Logger().Info("fuga: alloc := pc.root.TryAllocate(pc.GetNodeIterator, pc.GetNode)")
 	alloc := pc.root.TryAllocate(pc.GetNodeIterator, pc.GetNode)
+
 	if alloc != nil {
+		log.Logger().Info("fuga: alloc != nil")
+		log.Logger().Info(fmt.Sprintf("fuga: alloc.ApplicationID = %s, alloc.AllocationKey = %s",
+			alloc.ApplicationID, alloc.AllocationKey))
 		return pc.allocate(alloc)
 	}
+
+	log.Logger().Info("fuga: alloc == nil")
+
+	// fuga
+	fuga(pc.GetApplications(), pc.GetNodes())
+
 	return nil
 }
 
@@ -842,13 +856,6 @@ func (pc *PartitionContext) tryReservedAllocate() *objects.Allocation {
 		// nothing to do just return
 		return nil
 	}
-
-	// fuga
-	reservedCopy := pc.root.GetReservedApps()
-	if len(reservedCopy) == 0 {
-		fuga(pc.GetApplications(), pc.GetNodes())
-	}
-	// fuga
 
 	// try allocating from the root down
 	alloc := pc.root.TryReservedAllocate(pc.GetNodeIterator)
