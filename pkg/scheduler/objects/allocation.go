@@ -194,3 +194,17 @@ func (a *Allocation) IsReleased() bool {
 func (a *Allocation) getTaskGroup() string {
 	return a.taskGroupName
 }
+
+// GetResult gets the result of this allocation
+func (a *Allocation) GetResult() AllocationResult {
+	a.RLock()
+	defer a.RUnlock()
+	return a.result
+}
+
+// SetResult sets the result of this allocation
+func (a *Allocation) SetResult(result AllocationResult) {
+	a.Lock()
+	defer a.Unlock()
+	a.result = result
+}

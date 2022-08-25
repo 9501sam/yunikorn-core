@@ -86,6 +86,11 @@ func (aa *AllocationAsk) String() string {
 	return fmt.Sprintf("AllocationKey %s, ApplicationID %s, Resource %s, PendingRepeats %d", aa.AllocationKey, aa.ApplicationID, aa.AllocatedResource, aa.pendingRepeatAsk)
 }
 
+// GetAllocationKey returns the allocation key for this ask
+func (aa *AllocationAsk) GetAllocationKey() string {
+	return aa.allocationKey
+}
+
 // Update pending ask repeat with the delta given.
 // Update the pending ask repeat counter with the delta (pos or neg). The pending repeat is always 0 or higher.
 // If the update would cause the repeat to go negative the update is discarded and false is returned.

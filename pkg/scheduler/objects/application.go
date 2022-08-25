@@ -822,7 +822,7 @@ func (sa *Application) getOutstandingRequests(headRoom *resources.Resource, tota
 
 // Try a regular allocation of the pending requests
 // This includes placeholders
-func (sa *Application) tryAllocate(headRoom *resources.Resource, nodeIterator func() NodeIterator) *Allocation {
+func (sa *Application) tryAllocate(headRoom *resources.Resource, nodeIterator func() NodeIterator, getNodeFn func(string) *Node) *Allocation {
 	sa.Lock()
 	defer sa.Unlock()
 	// make sure the request are sorted
@@ -850,6 +850,39 @@ func (sa *Application) tryAllocate(headRoom *resources.Resource, nodeIterator fu
 			}
 			continue
 		}
+
+		requiredNode := request.GetRequiredNode()
+		// does request have any constraint to run on specific node?
+		if requiredNode != "" {
+			// the iterator might not have the node we need as it could be reserved, or we have not added it yet
+			node := getNodeFn(requiredNode)
+			if node == nil {
+				log.Logger().Warn("required node is not found (could be transient)",
+					zap.String("application ID", sa.ApplicationID),
+					zap.String("allocationKey", request.GetAllocationKey()),
+					zap.String("required node", requiredNode))
+				return nil
+			}
+			alloc := sa.tryNode(node, request)
+			if alloc != nil {
+				// check if the node was reserved and we allocated after a release
+				if _, ok := sa.reservations[reservationKey(node, nil, request)]; ok {
+					log.Logger().Debug("allocation on required node after release",
+						zap.String("appID", sa.ApplicationID),
+						zap.String("nodeID", requiredNode),
+						zap.String("allocationKey", request.GetAllocationKey()))
+					alloc.SetResult(AllocatedReserved)
+					return alloc
+				}
+				log.Logger().Debug("allocation on required node is completed",
+					zap.String("nodeID", node.NodeID),
+					zap.String("allocationKey", request.GetAllocationKey()),
+					zap.String("AllocationResult", alloc.GetResult().String()))
+				return alloc
+			}
+			return newReservedAllocation(Reserved, node.NodeID, request)
+		}
+
 		iterator := nodeIterator()
 		if iterator != nil {
 			alloc := sa.tryNodes(request, iterator)
