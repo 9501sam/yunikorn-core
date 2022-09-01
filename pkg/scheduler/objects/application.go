@@ -84,6 +84,7 @@ type Application struct {
 	maxAllocatedResource *resources.Resource         // max allocated resources
 	allocatedPlaceholder *resources.Resource         // total allocated placeholder resources
 	allocations          map[string]*Allocation      // list of all allocations
+	allocations_         map[string]*Allocation      // list of all allocations NOTE: only for fuga, using AllocationKey as key
 	placeholderAsk       *resources.Resource         // total placeholder request for the app (all task groups)
 	stateMachine         *fsm.FSM                    // application state machine
 	stateTimer           *time.Timer                 // timer for state time
@@ -117,6 +118,7 @@ func NewApplication(siApp *si.AddApplicationRequest, ugi security.UserGroup, eve
 		requests:             make(map[string]*AllocationAsk),
 		reservations:         make(map[string]*reservation),
 		allocations:          make(map[string]*Allocation),
+		allocations_:         make(map[string]*Allocation),
 		stateMachine:         NewAppState(),
 		placeholderAsk:       resources.NewResourceFromProto(siApp.PlaceholderAsk),
 		finishedTime:         time.Time{},
@@ -797,6 +799,10 @@ func (sa *Application) sortRequests(ascending bool) {
 		if request.GetRequiredNode() == "" {
 			continue
 		}
+		if sa.allocations_[request.AllocationKey] != nil {
+			continue
+		}
+
 		sa.sortedRequests = append(sa.sortedRequests, request)
 	}
 	// we might not have any requests
@@ -834,9 +840,8 @@ func (sa *Application) tryAllocate(headRoom *resources.Resource, nodeIterator fu
 	// get all the requests from the app sorted in order
 
 	// NOTE: fuga
-	log.Logger().Info(fmt.Sprintf("fuga: sa.tryAllocate() app: %s", sa.ApplicationID))
+	log.Logger().Info(fmt.Sprintf("fuga: (%s).tryAllocate(), sortedRequests:", sa.ApplicationID))
 
-	log.Logger().Info(fmt.Sprintf("fuga: sortedRequests:"))
 	for i, req := range sa.sortedRequests {
 		log.Logger().Info(fmt.Sprintf("fuga: sortedRequests[%d] = %s", i, req.AllocationKey))
 	}
@@ -868,13 +873,19 @@ func (sa *Application) tryAllocate(headRoom *resources.Resource, nodeIterator fu
 		requiredNode := request.GetRequiredNode()
 
 		// NOTE: fuga
-		log.Logger().Info(fmt.Sprintf("fuga: app: %s, reuqest: %s, requiredNode: %s",
+		log.Logger().Info(fmt.Sprintf("fuga: sa.tryAllocate(): %s, %s, %s",
 			sa.ApplicationID, request.AllocationKey, requiredNode))
 
 		// does request have any constraint to run on specific node?
 		if requiredNode != "" {
 			// the iterator might not have the node we need as it could be reserved, or we have not added it yet
 			node := getNodeFn(requiredNode)
+			// NOTE: fuga
+			availible := node.GetAvailableResource().Resources
+			capacity := node.GetCapacity().Resources
+			log.Logger().Info(fmt.Sprintf("fuga: sa.tryAllocate(): node (%s), capacity(mem:%d, vcore:%d), availible(mem:%d, vcore:%d)",
+				node.NodeID, capacity[resources.MEMORY], capacity[resources.VCORE], availible[resources.MEMORY], availible[resources.VCORE]))
+
 			if node == nil {
 				log.Logger().Warn("required node is not found (could be transient)",
 					zap.String("application ID", sa.ApplicationID),
@@ -886,19 +897,20 @@ func (sa *Application) tryAllocate(headRoom *resources.Resource, nodeIterator fu
 			if alloc != nil {
 				// check if the node was reserved and we allocated after a release
 				if _, ok := sa.reservations[reservationKey(node, nil, request)]; ok {
-					log.Logger().Debug("allocation on required node after release",
+					log.Logger().Debug("fuga: allocation on required node after release",
 						zap.String("appID", sa.ApplicationID),
 						zap.String("nodeID", requiredNode),
 						zap.String("allocationKey", request.GetAllocationKey()))
 					alloc.SetResult(AllocatedReserved)
 					return alloc
 				}
-				log.Logger().Debug("allocation on required node is completed",
+				log.Logger().Debug("fuga: allocation on required node is completed",
 					zap.String("nodeID", node.NodeID),
 					zap.String("allocationKey", request.GetAllocationKey()),
 					zap.String("AllocationResult", alloc.GetResult().String()))
 				return alloc
 			}
+			log.Logger().Info("fuga: newReservedAllocation()")
 			return newReservedAllocation(Reserved, node.NodeID, request)
 		}
 
@@ -1257,6 +1269,10 @@ func (sa *Application) tryNode(node *Node, ask *AllocationAsk) *Allocation {
 	}
 	// skip the node if conditions can not be satisfied
 	if !node.preAllocateConditions(allocKey) {
+		log.Logger().Debug("fuga: can not be sstisfied",
+			zap.String("appID", sa.ApplicationID),
+			zap.String("nodeID", node.NodeID),
+			zap.String("allocationKey", ask.GetAllocationKey()))
 		return nil
 	}
 	// everything OK really allocate
@@ -1280,6 +1296,7 @@ func (sa *Application) tryNode(node *Node, ask *AllocationAsk) *Allocation {
 		// return allocation
 		return alloc
 	}
+	log.Logger().Info(fmt.Sprintf("fuga: node.AddAllocation(alloc: %f) is false", ask.GetAllocationKey()))
 	return nil
 }
 
@@ -1409,6 +1426,7 @@ func (sa *Application) addAllocationInternal(info *Allocation) {
 		sa.maxAllocatedResource = resources.ComponentWiseMax(sa.allocatedResource, sa.maxAllocatedResource)
 	}
 	sa.allocations[info.UUID] = info
+	sa.allocations_[info.AllocationKey] = info
 }
 
 func (sa *Application) ReplaceAllocation(uuid string) *Allocation {

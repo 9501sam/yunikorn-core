@@ -828,20 +828,20 @@ func (pc *PartitionContext) tryAllocate() *objects.Allocation {
 		return nil
 	}
 
-	log.Logger().Info("fuga: enter (pc *PartitionContext) tryAllocate()")
+	log.Logger().Info("fuga: pc.tryAllocate()")
 
 	// try allocating from the root down
-	log.Logger().Info("fuga: alloc := pc.root.TryAllocate(pc.GetNodeIterator, pc.GetNode)")
+	log.Logger().Info("fuga: pc.tryAllocate(): alloc := pc.root.TryAllocate(pc.GetNodeIterator, pc.GetNode)")
 	alloc := pc.root.TryAllocate(pc.GetNodeIterator, pc.GetNode)
 
 	if alloc != nil {
-		log.Logger().Info("fuga: alloc != nil")
-		log.Logger().Info(fmt.Sprintf("fuga: alloc.ApplicationID = %s, alloc.AllocationKey = %s",
+		log.Logger().Info("fuga: pc.tryAllocate(): alloc != nil")
+		log.Logger().Info(fmt.Sprintf("fuga: pc.tryAllocate(): alloc.ApplicationID = %s, alloc.AllocationKey = %s",
 			alloc.ApplicationID, alloc.AllocationKey))
 		return pc.allocate(alloc)
 	}
 
-	log.Logger().Info("fuga: alloc == nil")
+	log.Logger().Info("fuga: pc.tryAllocate(): alloc == nil")
 
 	// fuga
 	fuga(pc.GetApplications(), pc.GetNodes())

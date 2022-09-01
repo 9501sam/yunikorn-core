@@ -1063,7 +1063,7 @@ func (sq *Queue) SetMaxResource(max *resources.Resource) {
 // Lock free call this all locks are taken when needed in called functions
 func (sq *Queue) TryAllocate(iterator func() NodeIterator, getnode func(string) *Node) *Allocation {
 	if sq.IsLeafQueue() {
-		log.Logger().Info("fuga: enter sq.TryAllocate()")
+		log.Logger().Info("fuga: enter sq.TryAllocate()+++++++++++++++++")
 
 		// get the headroom
 		headRoom := sq.getHeadRoom()
