@@ -497,6 +497,9 @@ func fuga(apps []*objects.Application, nodes []*objects.Node) error {
 		if n.NodeID == "lab" {
 			continue
 		}
+		if !n.IsReady() {
+			continue
+		}
 		if resources.StrictlyGreaterThanZero(n.GetAvailableResource()) {
 			players = append(players, n)
 		}

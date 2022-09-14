@@ -1512,3 +1512,27 @@ func (pc *PartitionContext) AddRejectedApplication(rejectedApplication *objects.
 	}
 	pc.rejectedApplications[rejectedApplication.ApplicationID] = rejectedApplication
 }
+
+func (pc *PartitionContext) PrintUsage() {
+	ns := pc.GetNodes()
+	for _, n := range ns {
+		//log.Logger().Info(fmt.Sprintf("node: %s", n.NodeID))
+		// avares := n.GetAvailableResource().Resources
+		//totres := n.GetCapacity().Resources
+		utilized := n.GetUtilizedResource().Resources
+
+		log.Logger().Info(fmt.Sprintf("fuga: usage: node: nodeID:%s --------- : ", n.NodeID))
+
+		//log.Logger().Info(fmt.Sprintf("fuga: usage: node: all mem: %d", totres[resources.MEMORY]))
+		//log.Logger().Info(fmt.Sprintf("fuga: usage: node: all cpu: %d", totres[resources.VCORE]))
+
+		log.Logger().Info(fmt.Sprintf("fuga: usage: node: utilized mem: %d%%", utilized[resources.MEMORY]))
+		log.Logger().Info(fmt.Sprintf("fuga: usage: node: utilized cpu: %d%%", utilized[resources.VCORE]))
+
+		/*for s, q := range utilized {
+			totq := totres[s]
+			usage := (float64(q) / float64(totq)) * 100
+			log.Logger().Info(fmt.Sprintf("fuga: usage: node: %s[%s]: %f%%", n.NodeID, s, usage))
+		}*/
+	}
+}

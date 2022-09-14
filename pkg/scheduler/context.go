@@ -936,3 +936,20 @@ func (cc *ClusterContext) SetLastHealthCheckResult(c *dao.SchedulerHealthDAOInfo
 	defer cc.Unlock()
 	cc.lastHealthCheckResult = c
 }
+
+func (cc *ClusterContext) PrintUsage() {
+	for {
+		for _, psc := range cc.GetPartitionMapClone() {
+			// if there are no resources in the partition just skip
+			if psc.root.GetMaxResource() == nil {
+				continue
+			}
+			// a stopped partition does not allocate
+			if psc.isStopped() {
+				continue
+			}
+			psc.PrintUsage()
+		}
+		time.Sleep(10 * time.Second)
+	}
+}
