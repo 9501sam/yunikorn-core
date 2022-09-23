@@ -72,6 +72,7 @@ func (s *Scheduler) StartService(handlers handler.EventHandlers, manualSchedule 
 
 // Internal start scheduling service
 func (s *Scheduler) internalSchedule() {
+	go s.clusterContext.PrintUsage()
 	for {
 		s.awaitActivity()
 		if s.clusterContext.schedule() {
