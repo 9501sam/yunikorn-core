@@ -825,13 +825,11 @@ func (pc *PartitionContext) calculateOutstandingRequests() []*objects.Allocation
 func (pc *PartitionContext) tryAllocate() *objects.Allocation {
 	if !resources.StrictlyGreaterThanZero(pc.root.GetPendingResource()) {
 		// nothing to do just return
-		pc.PrintDominantShare()
 		return nil
 	}
 	// try allocating from the root down
 	alloc := pc.root.TryAllocate(pc.GetNodeIterator)
 	if alloc != nil {
-		pc.PrintDominantShare()
 		return pc.allocate(alloc)
 	}
 	return nil
@@ -1501,35 +1499,27 @@ func (pc *PartitionContext) AddRejectedApplication(rejectedApplication *objects.
 }
 
 func (pc *PartitionContext) PrintUsage() {
-	ns := pc.GetNodes()
-	for _, n := range ns {
-		//log.Logger().Info(fmt.Sprintf("node: %s", n.NodeID))
-		// avares := n.GetAvailableResource().Resources
-		//totres := n.GetCapacity().Resources
+	log.Logger().Info(fmt.Sprintf("usage: enter PrintUsage()"))
+
+	nodes := pc.GetNodes()
+	for _, n := range nodes {
 		utilized := n.GetUtilizedResource().Resources
-
-		log.Logger().Info(fmt.Sprintf("fuga: usage: node %s: --------- : ", n.NodeID))
-
-		//log.Logger().Info(fmt.Sprintf("fuga: usage: node: all mem: %d", totres[resources.MEMORY]))
-		//log.Logger().Info(fmt.Sprintf("fuga: usage: node: all cpu: %d", totres[resources.VCORE]))
-
-		log.Logger().Info(fmt.Sprintf("fuga: usage: node %s: utilized mem: %d%%", n.NodeID, utilized[resources.MEMORY]))
-		log.Logger().Info(fmt.Sprintf("fuga: usage: node %s: utilized cpu: %d%%", n.NodeID, utilized[resources.VCORE]))
-
-		/*for s, q := range utilized {
-			totq := totres[s]
-			usage := (float64(q) / float64(totq)) * 100
-			log.Logger().Info(fmt.Sprintf("fuga: usage: node: %s[%s]: %f%%", n.NodeID, s, usage))
-		}*/
+		log.Logger().Info(fmt.Sprintf("usage: node %s: --------- : ", n.NodeID))
+		log.Logger().Info(fmt.Sprintf("usage: node %s: utilized mem: %d%%", n.NodeID, utilized[resources.MEMORY]))
+		log.Logger().Info(fmt.Sprintf("usage: node %s: utilized cpu: %d%%", n.NodeID, utilized[resources.VCORE]))
 	}
+
+	pc.PrintDominantShare()
 }
 func (pc *PartitionContext) PrintDominantShare() {
+	log.Logger().Info("dominantShare: enter PrintDominantShare()")
 	apps := pc.GetApplications()
-	log.Logger().Info("drf:----------------------------------------")
 	for _, app := range apps {
-		log.Logger().Info(fmt.Sprintf("drf: app: %s, share: %+v\n", app.ApplicationID, getDominantShare(app.GetAllocatedResource(), pc.GetTotalPartitionResource())))
+		log.Logger().Info(fmt.Sprintf("dominantShare: app: %s, share: %+v\n",
+			app.ApplicationID, getDominantShare(app.GetAllocatedResource(), pc.GetTotalPartitionResource())))
 	}
 }
+
 func getDominantShare(res, total *resources.Resource) float64 {
 	totalCPU := total.Resources[resources.MEMORY]
 	totalMEM := total.Resources[resources.VCORE]
