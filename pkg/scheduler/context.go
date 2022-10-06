@@ -769,12 +769,6 @@ func (cc *ClusterContext) processAsks(request *si.AllocationRequest) {
 			log.Logger().Info(fmt.Sprintf("%+v\n", res))
 		}
 
-		// set resources amount
-		for _, quantity := range siAsk.ResourceAsk.Resources {
-			result := quantity
-			result.Value = result.Value * 2
-		}
-
 		// determinate node to lab5
 		// siAsk.Tags["node"] = "lab5"
 
