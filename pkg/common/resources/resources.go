@@ -495,6 +495,10 @@ func getShares(res, total *Resource) []float64 {
 	return shares
 }
 
+func GetShares(res, total *Resource) []float64 {
+	return getShares(res, total)
+}
+
 // Calculate share for left of total and right of total.
 // This returns the same value as compareShares does:
 // 0 for equal shares

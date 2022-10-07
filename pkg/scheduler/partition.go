@@ -1521,17 +1521,23 @@ func (pc *PartitionContext) PrintDominantShare() {
 }
 
 func getDominantShare(res, total *resources.Resource) float64 {
-	totalCPU := total.Resources[resources.MEMORY]
-	totalMEM := total.Resources[resources.VCORE]
-	resCPU := res.Resources[resources.MEMORY]
-	resMEM := res.Resources[resources.VCORE]
-	CPUShare := float64(resCPU) / float64(totalCPU)
-	MEMShare := float64(resMEM) / float64(totalMEM)
-	var dominantShare float64
-	if CPUShare > MEMShare {
-		dominantShare = CPUShare
-	} else {
-		dominantShare = MEMShare
+	// totalCPU := total.Resources[resources.MEMORY]
+	// totalMEM := total.Resources[resources.VCORE]
+	// resCPU := res.Resources[resources.MEMORY]
+	// resMEM := res.Resources[resources.VCORE]
+	// CPUShare := float64(resCPU) / float64(totalCPU)
+	// MEMShare := float64(resMEM) / float64(totalMEM)
+	// var dominantShare float64
+	// if CPUShare > MEMShare {
+	// 	dominantShare = CPUShare
+	// } else {
+	// 	dominantShare = MEMShare
+	// }
+	// return dominantShare
+	shares := resources.GetShares(res, total)
+	dominantRes := len(shares) - 1
+	if dominantRes > 0 {
+		return shares[dominantRes]
 	}
-	return dominantShare
+	return 0.0
 }
